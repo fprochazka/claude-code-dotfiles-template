@@ -1,0 +1,6 @@
+client_secret.json
+*token*.json
+.credentials*
+.claude/plans/
+.claude/projects/
+*.local.*
