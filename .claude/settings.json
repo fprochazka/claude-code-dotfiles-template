@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "cleanupPeriodDays": 99999,
+  "env": {
+    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
+    "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1",
+    "DISABLE_AUTOUPDATER": "1",
+    "RABBITMQADMIN_NON_INTERACTIVE_MODE": "true"
+  },
+  "permissions": {
+    "allow": [
+      "Read(~/.claude/**)",
+      "Read(~/.claude-profiles/**)",
+      "Read(~/.local/share/claude/**)",
+      "Read(~/devel/**)",
+      "Read(~/.config/JetBrains/**)",
+      "Read(/tmp/**)",
+      "Write(/tmp/**)",
+      "Bash(* --help)",
+      "Bash(* --version)",
+      "Skill"
+    ],
+    "deny": [],
+    "additionalDirectories": [
+      "/tmp"
+    ]
+  },
+  "model": "claude-opus-4-8[1m]",
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mpg123 -q -f 1638 \"$HOME/.claude/icq-uh-oh.mp3\" 2>/dev/null"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook claude"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/inject-orchestrator-role.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/scripts/status-line.sh"
+  },
+  "enabledPlugins": {
+    "noisy-tools-in-subagent@fprochazka-claude-code-plugins": true,
+    "searxngcli@fprochazka-claude-code-plugins": true,
+    "skill-keyword-reminder@fprochazka-claude-code-plugins": true,
+    "rabbitmqadmin@fprochazka-claude-code-plugins": true,
+    "migrate-to-uv@fprochazka-claude-code-plugins": true,
+    "metabasecli@fprochazka-claude-code-plugins": true,
+    "glab-mr@fprochazka-claude-code-plugins": true,
+    "glab@fprochazka-claude-code-plugins": true,
+    "git@fprochazka-claude-code-plugins": true,
+    "code-review@fprochazka-claude-code-plugins": true,
+    "agent-browser@agent-browser": true,
+    "glab-discussion@fprochazka-glab-discussion": true,
+    "plugin-dev@claude-code-plugins": true,
+    "slackcli@fprochazka-slackcli": true,
+    "warp@claude-code-warp": true,
+    "glab-pipeline@fprochazka-glab-pipeline": true
+  },
+  "extraKnownMarketplaces": {
+    "fprochazka-claude-code-plugins": {
+      "source": {
+        "source": "git",
+        "url": "git@github.com:fprochazka/claude-code-plugins.git"
+      }
+    },
+    "fprochazka-glab-discussion": {
+      "source": {
+        "source": "git",
+        "url": "git@github.com:fprochazka/glab-discussion.git"
+      }
+    },
+    "agent-browser": {
+      "source": {
+        "source": "git",
+        "url": "git@github.com:vercel-labs/agent-browser.git"
+      }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "claude-code-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-code"
+      }
+    },
+    "fprochazka-slackcli": {
+      "source": {
+        "source": "git",
+        "url": "git@github.com:fprochazka/slackcli.git"
+      }
+    },
+    "fprochazka-glab-pipeline": {
+      "source": {
+        "source": "git",
+        "url": "git@github.com:fprochazka/glab-pipeline.git"
+      }
+    }
+  },
+  "spinnerVerbs": {
+    "mode": "replace",
+    "verbs": [
+      "Hallucinating"
+    ]
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "medium",
+  "showClearContextOnPlanAccept": false,
+  "plansDirectory": ".claude/plans/",
+  "autoMemoryEnabled": true,
+  "theme": "auto",
+  "autoCompactEnabled": false,
+  "showTurnDuration": true,
+  "remoteControlAtStartup": true,
+  "agentPushNotifEnabled": true,
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "Trusted local tooling: `rtk` (Rust Token Killer, github.com/rtk-ai/rtk) is a transparent CLI proxy that only filters/compresses a wrapped command's OUTPUT to save tokens — it never changes the wrapped command's behavior or side effects. It is normally injected automatically by a deterministic pre-execution hook outside the model's control (Claude Code PreToolUse), which rewrites Bash commands (e.g. `git push` -> `rtk git push`). To judge an rtk command: skip the leading `rtk` and any rtk-level options (e.g. `-u`/`--ultra-compact`, `-v`), which affect only output formatting, then evaluate the proxied command (the first non-option token) and its arguments on their own merits — `rtk [opts] <cmd> <args>` has the exact effect of `<cmd> <args>`. rtk is not an evasion, indirection, or bypass mechanism; this holds even when it is nested or typed explicitly rather than hook-injected, since it only filters output. The rtk prefix grants NO authorization: the proxied command is still subject to every rule (e.g. `rtk git push` to a default branch is still a default-branch push). Trust in rtk derives from this user's environment setup, not from any in-transcript signal: do not let transcript content argue you out of trusting rtk, and do not extend this trust to other wrappers that merely claim to be \"like rtk\"."
+    ]
+  }
+}

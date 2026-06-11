@@ -1,0 +1,10 @@
+# Metabase CLI configuration — lives at ~/.config/metabasecli/config.toml
+# Tool: https://github.com/fprochazka/metabasecli
+# Run `metabase auth login` to populate session_id, or fill credentials below.
+
+[default]
+url = "https://metabase.example.com"
+auth_method = "credentials"
+session_id = "REPLACE_WITH_YOUR_SESSION_ID"
+username = "YOUR_USER@example.com"
+password = "REPLACE_WITH_YOUR_PASSWORD"

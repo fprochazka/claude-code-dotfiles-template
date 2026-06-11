@@ -1,0 +1,10 @@
+# Slack CLI configuration — lives at ~/.config/slackcli/config.toml
+# Tool: https://github.com/fprochazka/slackcli
+#
+# Configure your Slack organizations here. Each org needs a token:
+#   xoxp-*  user token  (acts AS you, so the agent sees what you see)
+#   xoxb-*  bot token
+# The active org is selected by the SLACK_ORG env var (set per-profile in .claude-profiles/config.yaml).
+
+[orgs.your-org]
+token = "REPLACE_WITH_YOUR_xoxp_TOKEN"

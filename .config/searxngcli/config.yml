@@ -1,0 +1,4 @@
+# SearXNG CLI configuration — lives at ~/.config/searxngcli/config.yml
+# Tool: https://github.com/fprochazka/searxngcli
+# Point at your own SearXNG instance (a free, privacy-respecting metasearch engine).
+base_url: https://your-searxng-instance.example

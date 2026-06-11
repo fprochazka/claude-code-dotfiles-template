@@ -1,0 +1,46 @@
+# Claude Code Multi-Account Profile Configuration
+#
+# Consumed by `claude-code-auth-switch` (https://github.com/fprochazka/claude-code-auth-switch).
+# `install.py` reads this file, creates ~/.claude-profiles/<name>/ per profile, and generates
+# thin wrapper scripts in bin_dir (see ../.local/bin/claude-*).
+
+source_dir: ~/.claude
+bin_dir: ~/.local/bin
+
+profiles:
+  personal:
+    description: "Personal Anthropic account"
+    model: "claude-opus-4-8[1m]"
+    env:
+      AGENT_BROWSER_AUTO_CONNECT: 1
+
+  work-team:
+    description: "Work team subscription"
+    model: "claude-opus-4-8[1m]"
+    add_dirs:
+      - ~/devel/projects/work
+    attribution:
+      commit: "🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
+      pr: "🤖 Generated with [Claude Code](https://claude.ai/code)"
+    env:
+      GITLAB_HOST: "gitlab.example.com"
+      AGENT_BROWSER_AUTO_CONNECT: 1
+      DD_SITE: "datadoghq.com"
+      SLACK_ORG: "your-slack-org"
+
+  work-vertex:
+    description: "Work via Google Cloud Vertex AI"
+    model: "claude-opus-4-8[1m]"
+    add_dirs:
+      - ~/devel/projects/work
+    attribution:
+      commit: "🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
+      pr: "🤖 Generated with [Claude Code](https://claude.ai/code)"
+    env:
+      GITLAB_HOST: "gitlab.example.com"
+      AGENT_BROWSER_AUTO_CONNECT: 1
+      DD_SITE: "datadoghq.com"
+      CLAUDE_CODE_USE_VERTEX: "1"
+      ANTHROPIC_VERTEX_PROJECT_ID: "your-gcp-project-id"
+      CLOUD_ML_REGION: "global"
+      SLACK_ORG: "your-slack-org"

@@ -1,0 +1,11 @@
+# Linear MCP CLI configuration — lives at ~/.config/linear-mcp/config.yaml
+# Tool: https://github.com/fprochazka/linear-mcp-cli
+# Easiest way to create this: run `linear-mcp init` (prompts for the API key).
+# Get an API key at https://linear.app/settings/api  (or set env LINEAR_API_KEY, which wins).
+
+linear:
+  api_key: "REPLACE_WITH_YOUR_LINEAR_API_KEY"
+
+mcp_server:
+  timeout: 30
+  sse_read_timeout: 300

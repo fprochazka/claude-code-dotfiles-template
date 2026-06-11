@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+GOOGLE_WORKSPACE_CLI_CONFIG_DIR=~/.config/gws/personal exec gws "$@" 2> >(grep -v '^Using keyring backend:' >&2)

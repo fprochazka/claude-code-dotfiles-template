@@ -1,0 +1,5 @@
+{
+  "_tool": "https://github.com/Doist/outline-cli",
+  "api_token": "REPLACE_WITH_YOUR_OUTLINE_API_TOKEN",
+  "base_url": "https://outline.example.com"
+}
