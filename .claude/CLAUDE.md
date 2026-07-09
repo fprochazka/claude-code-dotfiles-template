@@ -36,5 +36,12 @@ For any tool/CLI argument longer than a few words, put the content in a file and
 - If you're creating new content, write it to `/tmp/<descriptive-unique-name>` (include a slug like the ticket ID or MR number to avoid collisions across tasks).
 - If you already wrote the content to a file once and need it for another tool call, reuse that file instead of re-writing it.
 
+## Style
+* Check if the project has `.editorconfig` and follow the style.
+* Make sure you don't write needless short lines, we all have big screens now, reasonable minimum line length is 210 or more, especially for markdown.
+
 ## Other
 * when analyzing output of a command that returns JSON, always prefer `jq` over `python`, as it has smaller surface area to check for security problems
+
+## Scheduling
+* You've almost always failed to create a working "monitor", that would fire when it should, and worse, sometimes subagents set it up and then return which ends them and clears the monitor - don't repeat these mistakes anymore, don't use monitors at all. Instead, when waiting for something quick setup a few-minutes-rate cron to check if it's done - its not as elegant but it works reliably.

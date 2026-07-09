@@ -1,5 +1,14 @@
 {
   "_tool": "https://github.com/Doist/outline-cli",
-  "api_token": "REPLACE_WITH_YOUR_OUTLINE_API_TOKEN",
-  "base_url": "https://outline.example.com"
+  "users": [
+    {
+      "id": "REPLACE_WITH_YOUR_OUTLINE_USER_ID",
+      "name": "YOUR_NAME",
+      "base_url": "https://outline.example.com",
+      "team_name": "your-team",
+      "has_refresh_token": false
+    }
+  ],
+  "default_user_id": "REPLACE_WITH_YOUR_OUTLINE_USER_ID",
+  "config_version": 2
 }

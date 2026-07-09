@@ -9,6 +9,19 @@ allowed-tools: Bash(linear-mcp --help), Bash(linear-mcp config:*), Bash(linear-m
 
 CLI tool providing direct access to Linear data. Each Linear MCP tool is exposed as a command.
 
+## ⚠️ Mutating commands are NOT idempotent — never re-run a create to inspect its output
+
+`save_issue` (without `--id`), `save_project`, `save_comment` (without `--id`), `save_document` (without `--id`/slug), and `create_issue_label` **create a brand-new record on every invocation**. Running one twice makes a duplicate.
+
+**The exact trap that has caused duplicate tickets more than once:** you run a create, pipe it through `grep`/`jq`/`tail`/`head` to pull the identifier or URL, the filter matches nothing (a field you expected is named differently, or the shape differs), you read the empty output as *"it didn't return what I wanted / it didn't work"* and re-run the same command — but the **first create already succeeded**. Now there are two tickets.
+
+**Hard rules — follow all of them:**
+
+1. **Run a create with NO output filter.** Never pipe a `save_*`-create through `grep`/`jq`/`tail`/`head`. Print the whole response and read the `id`/`identifier`/`url` straight from it — the response always contains them. Filtering is what hides success and triggers the fatal retry.
+2. **Never re-run a create to reformat, re-extract, or "just get the URL" of something you just made.** If you missed a field, DO NOT re-create — look it up with a **read-only** `get_issue`/`list_issues` instead.
+3. **If a create's result looks empty, errored inside a pipe, or is ambiguous, assume it MAY have succeeded.** Verify with `list_issues`/`get_issue` **before** retrying. Only retry a create after you've confirmed nothing was created.
+4. **After a create, every further change uses `--id`** (that UPDATES and is safe to repeat). A `save_*` *with* `--id` = update; *without* `--id` = create. When in doubt, check for the `--id`.
+
 ## Quick Reference
 
 | Entity | Commands | Reference |
@@ -159,6 +172,8 @@ linear-mcp get_issue --id "ABC-123" --includeRelations true
 ## save_issue
 
 Create or update an issue. If `--id` is provided, updates the existing issue; otherwise creates a new one. When creating, `--title` and `--team` are required.
+
+> **Creating (no `--id`) is a non-idempotent mutation — see the ⚠️ section at the top.** Run the create unpiped, read the `identifier`/`url` from the full response, and never re-run it to fetch a field you missed (use `get_issue`/`list_issues` for that). A second run = a duplicate ticket.
 
 ```bash
 # Create basic (no description)

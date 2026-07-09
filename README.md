@@ -158,8 +158,8 @@ and stays silent for them, so subagents aren't told to delegate-the-delegation).
 ### `scripts/status-line.sh`
 The instrument that makes manual context management possible. Shows: host letter, cwd (with a `⌥`
 worktree indicator, stripping `/.worktrees/<name>`), git branch + dirty marker + `!<mr-id>`,
-**color-coded context headroom** (green <40% / orange 40–65% / red ≥65%, accounting for the fixed
-33k autocompact buffer), model, and active profile.
+**color-coded context usage** shown compactly as `Ctx: 43k (4%)` (green <40% / orange 40–65% /
+red ≥65%), model, active profile, and the time of the last transcript activity.
 *Dependencies:* the `!<mr-id>` part calls `git get-branch-mr-id`, a custom alias from my gitconfig
 (https://github.com/fprochazka/gitconfig). Without it the rest still works.
 

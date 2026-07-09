@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Status line script for Claude Code
-# Displays: B ~/full/path (git_branch*) | Ctx: 43k/1000k (4%), ~956k left | Model: Opus 4.6
+# Displays: B ~/full/path (git_branch*) | Ctx: 43k (4%) | Model: Opus 4.6 | 14:32
 
 # Define ANSI color codes
 GREEN=$'\e[32m'
@@ -18,7 +18,8 @@ eval "$(echo "$input" | jq -r '
   "used_pct=" + ((.context_window.used_percentage // 0) | floor | tostring),
   "ctx_size=" + ((.context_window.context_window_size // 0) | tostring),
   "input_tokens=" + (((.context_window.current_usage.input_tokens // 0) + (.context_window.current_usage.cache_creation_input_tokens // 0) + (.context_window.current_usage.cache_read_input_tokens // 0)) | tostring),
-  "model_name=" + ((.model.display_name // "") | @sh)
+  "model_name=" + ((.model.display_name // "") | @sh),
+  "transcript_path=" + ((.transcript_path // "") | @sh)
 ')"
 
 # Strip /.worktrees/<name> suffix to show the project root
@@ -85,11 +86,6 @@ esac
 context_info=""
 if [ "$ctx_size" -gt 0 ] 2>/dev/null; then
     current_k=$((input_tokens / 1000))
-    max_k=$((ctx_size / 1000))
-    # Autocompact buffer is a fixed 33k tokens
-    compact_max=$((ctx_size - 33000))
-    remains_k=$(( (compact_max - input_tokens) / 1000 ))
-    if [ $remains_k -lt 0 ]; then remains_k=0; fi
 
     # Color based on used_percentage: green < 40%, orange 40-65%, red >= 65%
     if [ "$used_pct" -lt 40 ]; then
@@ -100,7 +96,7 @@ if [ "$ctx_size" -gt 0 ] 2>/dev/null; then
         color="$RED"
     fi
 
-    context_info=$(printf " | Ctx: %s%sk/%sk (%s%%), ~%sk left%s" "$color" "$current_k" "$max_k" "$used_pct" "$remains_k" "$RESET")
+    context_info=$(printf " | Ctx: %s%sk (%s%%)%s" "$color" "$current_k" "$used_pct" "$RESET")
 fi
 
 # Model info
@@ -115,5 +111,25 @@ if [ -n "${FP_CC_AUTH_SWITCH_PROFILE:-}" ]; then
     profile_info=" | Profile: $FP_CC_AUTH_SWITCH_PROFILE"
 fi
 
+# Build AGE info from the last transcript entry's timestamp
+age_info=""
+if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
+    last_ts=$(tail -1 "$transcript_path" 2>/dev/null | jq -r '.timestamp // empty' 2>/dev/null)
+    if [ -n "$last_ts" ]; then
+        # Convert ISO 8601 timestamp to epoch seconds
+        last_epoch=$(date -d "$last_ts" +%s 2>/dev/null)
+        if [ -n "$last_epoch" ]; then
+            today=$(date +%Y-%m-%d)
+            entry_date=$(date -d "@$last_epoch" +%Y-%m-%d)
+            if [ "$entry_date" = "$today" ]; then
+                age_fmt=$(date -d "@$last_epoch" +%H:%M)
+            else
+                age_fmt=$(date -d "@$last_epoch" "+%Y-%m-%d %H:%M")
+            fi
+            age_info=" | $age_fmt"
+        fi
+    fi
+fi
+
 # Output the status line
-printf '%s%s%s %s%s%s%s%s%s ' "$GREEN" "$prefix" "$RESET" "$display_path" "$worktree_indicator" "$git_info" "$context_info" "$model_info" "$profile_info"
+printf '%s%s%s %s%s%s%s%s%s%s ' "$GREEN" "$prefix" "$RESET" "$display_path" "$worktree_indicator" "$git_info" "$context_info" "$model_info" "$profile_info" "$age_info"
