@@ -98,15 +98,15 @@ Pass arrays as JSON strings:
 
 **For any argument longer than a few words (descriptions, comments, document bodies), you MUST pass it via a file using `"$(cat <path>)"` rather than inlining.** This prevents shell escaping issues, preserves formatting, lets the user review before submission, and keeps edits cheap.
 
-- If the content already exists as a file on disk, use it directly — do **not** copy it to `/tmp` first.
-- When generating new content, write it to a `/tmp/` file named uniquely for the ticket/document (e.g., `/tmp/desc-ENG-123.md`, `/tmp/comment-ENG-456.md`). **Never** use generic names like `/tmp/desc.md` — they collide across tickets.
+- If the content already exists as a file on disk, use it directly — do **not** copy it into the scratchpad first.
+- When generating new content, write it to a file in the session **scratchpad directory** (the `/tmp/…/scratchpad` path from your system prompt), named uniquely for the ticket/document (e.g., `<scratchpad>/desc-ENG-123.md`, `<scratchpad>/comment-ENG-456.md`). **Never** use generic names like `desc.md` — they collide across tickets.
 - Reuse the same file for the same ticket/document across edits — the Write tool diff shows the user exactly what changed.
 
 | Parameter | Example |
 |-----------|---------|
-| `--description` | `--description "$(cat /tmp/desc-ENG-123.md)"` |
-| `--body` | `--body "$(cat /tmp/comment-ENG-123.md)"` |
-| `--content` | `--content "$(cat /tmp/doc-roadmap-q2.md)"` |
+| `--description` | `--description "$(cat <scratchpad>/desc-ENG-123.md)"` |
+| `--body` | `--body "$(cat <scratchpad>/comment-ENG-123.md)"` |
+| `--content` | `--content "$(cat <scratchpad>/doc-roadmap-q2.md)"` |
 
 **Short, single-line values** (titles, names, summaries) can be passed directly as strings.
 

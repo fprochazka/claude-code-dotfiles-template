@@ -34,7 +34,7 @@ Short, imperative, specific (e.g., "Add retry logic to payment webhook handler")
 ## Process
 
 1. Synthesize what you know from the conversation into a ticket draft
-2. Write the description a `/tmp/<title-in-dashed-case>-description.md` markdown file
+2. Write the description to a `<title-in-dashed-case>-description.md` markdown file in the session scratchpad dir
 3. Show the user only a high-level summary and make sure to print the path to the file, you don't have to recite it from memory, the user can read it from the file.
 4. Iterate if they want changes
 5. Ask which **team** to file it under (unless known from previous context). Guess priority. Don't set project, assignee or labes unless asked.

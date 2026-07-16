@@ -14,8 +14,9 @@
       "Read(~/.local/share/claude/**)",
       "Read(~/devel/**)",
       "Read(~/.config/JetBrains/**)",
-      "Read(/tmp/**)",
-      "Write(/tmp/**)",
+      "Read(//tmp/**)",
+      "Edit(//tmp/*)",
+      "Edit(//**/tmp/*)",
       "Bash(* --help)",
       "Bash(* --version)",
       "Skill"

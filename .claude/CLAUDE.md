@@ -29,12 +29,15 @@ Never dismiss build errors as 'pre-existing' - we will not be merging branches w
 ## Local verification
 Default to a minimal local check: app compiles/typechecks, lint is green, and tests directly relevant to the change pass. Do **not** run the full test suite locally — push and open the MR, let CI do the heavy lifting. Run more locally only if I ask, or if the change is risky enough that CI feedback would be too late.
 
-## Tool calls
-For any tool/CLI argument longer than a few words, put the content in a file and pass it via `"$(cat <path>)"` rather than inlining it in the tool call. This keeps tool calls small, makes edits to the argument cheap (small focused edits to the file instead of resending the whole thing), and avoids re-sending the same payload across calls.
+## Scratchpad & temp files
+**Scratchpad** is the session-specific working directory the harness gives you for temporary files — a path like `/tmp/claude-<uid>/<cwd-slug>/<session-id>/scratchpad`, spelled out in your system prompt. It's isolated from the user's project, writable without permission prompts, and scoped to the session. Use it for intermediate results, working scripts, drafts, and tool-call payloads — anything that would otherwise land in `/tmp`. Commands and skills refer to it as "the scratchpad dir" or `<scratchpad>/<name>` and rely on this definition instead of re-explaining it.
 
-- If a suitable file already exists on disk (e.g. a markdown file in the repo, an existing plan, a downloaded export), use it directly. Do **not** copy it to `/tmp` first — that's pointless churn.
-- If you're creating new content, write it to `/tmp/<descriptive-unique-name>` (include a slug like the ticket ID or MR number to avoid collisions across tasks).
-- If you already wrote the content to a file once and need it for another tool call, reuse that file instead of re-writing it.
+- **Fallback.** If the scratchpad path isn't present in your system prompt for some reason, create a random directory under `/tmp` once (e.g. `mktemp -d /tmp/claude-scratch-XXXXXX`) and use that as the session scratchpad for the rest of the session — don't write files loose in `/tmp` directly. Read "scratchpad" as "the harness-provided dir if available, otherwise the `/tmp` dir you created for this session"; everything below still applies to it.
+- **Unique names.** Name files with a slug (ticket ID, MR number, doc title) so they don't collide across tasks — never generic names like `desc.md` or `notes.md`.
+- **Reuse, don't churn.** If a suitable file already exists on disk (a repo file, an existing plan, a downloaded export), use it in place — do **not** copy it into the scratchpad first. If you already wrote content to a file once, reuse that file across tool calls instead of rewriting it.
+
+## Tool calls
+For any tool/CLI argument longer than a few words (descriptions, comments, bodies), pass it via a file with `"$(cat <path>)"` rather than inlining it in the tool call — use an existing file if one already holds the content, otherwise write it to the scratchpad first. This keeps tool calls small, makes edits to the argument cheap (small focused edits instead of regenerating the whole thing), and avoids having the LLM re-generate the full noisy tool call.
 
 ## Style
 * Check if the project has `.editorconfig` and follow the style.

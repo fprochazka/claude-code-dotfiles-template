@@ -21,7 +21,7 @@ $ARGUMENTS
    - **Gotchas** — non-obvious tradeoffs, things that look wrong but aren't, assumptions that depend on external state, anything a reviewer might flag as a bug without context.
    - **Where to focus** — call out the 1-3 most complex / load-bearing parts of the diff (with file:line pointers) that deserve the most careful review. Trivial parts (renames, formatting, mechanical refactors) can be explicitly de-prioritized.
    - Keep it tight. No empty sections, no filler, no "already done in branch X" meta-commentary.
-6. **Update the MR** — write the new description to `/tmp/<ticket-or-branch>-mr-description.md` and update the MR via `glab mr update` / `gh pr edit` using `--description "$(cat <path>)"`. Update the title the same way if it changed.
+6. **Update the MR** — write the new description to a file in the session scratchpad dir (e.g. `<scratchpad>/<ticket-or-branch>-mr-description.md`) and update the MR via `glab mr update` / `gh pr edit` using `--description "$(cat <path>)"`. Update the title the same way if it changed.
 7. **Report** — print the MR URL and a one-line summary of what you set.
 
 ## Notes
