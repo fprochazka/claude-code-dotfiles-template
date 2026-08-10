@@ -8,8 +8,10 @@ MARKETPLACES=(
   "git@github.com:fprochazka/glab-discussion.git"
   "git@github.com:fprochazka/glab-pipeline.git"
   "git@github.com:fprochazka/slackcli.git"
+  "git@github.com:vercel-labs/agent-browser.git"
   "anthropics/claude-plugins-official"
   "anthropics/claude-code"
+  "warpdotdev/claude-code-warp"
 )
 
 for mp in "${MARKETPLACES[@]}"; do
@@ -21,6 +23,7 @@ done
 echo "==> Installing plugins..."
 
 PLUGINS=(
+  "agent-browser@agent-browser"
   "code-review@fprochazka-claude-code-plugins"
   "git@fprochazka-claude-code-plugins"
   "glab-discussion@fprochazka-glab-discussion"
@@ -32,9 +35,11 @@ PLUGINS=(
   "noisy-tools-in-subagent@fprochazka-claude-code-plugins"
   "plugin-dev@claude-code-plugins"
   "rabbitmqadmin@fprochazka-claude-code-plugins"
+  "sdlc@fprochazka-claude-code-plugins"
   "searxngcli@fprochazka-claude-code-plugins"
   "skill-keyword-reminder@fprochazka-claude-code-plugins"
   "slackcli@fprochazka-slackcli"
+  "warp@claude-code-warp"
 )
 
 failed=()

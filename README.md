@@ -12,10 +12,11 @@ The directory tree mirrors your **home directory**, so every file is shown where
 .claude/                     → ~/.claude/
   settings.json              the harness config (hooks, permissions, plugins, model, …)
   CLAUDE.md                  global memory / rules (identity placeholdered)
-  orchestrator-role.md       SessionStart-injected "main agent is a pure orchestrator" role
+  agent-role-orchestrator.md SessionStart-injected role for the top-level session
+  agent-role-worker.md       SubagentStart-injected role for every subagent
   icq-uh-oh.mp3              sound played by the Stop hook when a turn finishes
-  scripts/                   status line, orchestrator-role injector, plugin install/update
-  commands/                  custom slash commands (/pre-plan, /handover-generate, …)
+  scripts/                   status line, agent-role injector, plugin install/update
+  commands/                  custom slash commands (/handover-generate, /interview, …)
   skills/                    bundled skills (see note — prune the ones you don't want)
 .claude-profiles/            → ~/.claude-profiles/
   config.yaml                multi-account profile definitions
@@ -46,8 +47,8 @@ The directory tree mirrors your **home directory**, so every file is shown where
 - **CLI + SKILL >> MCP.** MCPs sit in context and bloat it; a CLI costs nothing but the agent can't
   see it; a *skill* teaches the agent to use the CLI and is lazy-loaded; a skill with
   `trigger-keywords` gets reliably loaded. So most integrations here are CLIs wrapped in skills.
-- **Watch it work, like a psychopath.** Single agent, no fire-and-forget parallelism, steer mid-run.
-  Every mistake → a new line in `CLAUDE.md` or `.claude/rules/`.
+- **Watch it work, like a psychopath.** Cap the fan-out at about three subagents, read every result
+  back yourself, steer mid-run. Every mistake → a new line in `CLAUDE.md` or `.claude/rules/`.
 - **Build the boring plumbing before chasing the shiny.**
 
 ---
@@ -57,7 +58,7 @@ The directory tree mirrors your **home directory**, so every file is shown where
 Not all are required; install what the parts you adopt actually use.
 
 - **Claude Code** itself.
-- **jq** — used by the hooks and scripts. Required for the orchestrator hook + status line.
+- **jq** — used by the hooks and scripts. Required for the agent-role hook + status line.
 - **rtk** (Rust Token Killer) — https://github.com/rtk-ai/rtk — the `PreToolUse` Bash hook
   (`rtk hook claude`) rewrites noisy commands to cut tokens 60–90%. If you don't install it, the
   hook fails open (no harm), but remove the hook from `settings.json` to avoid the overhead.
@@ -108,6 +109,7 @@ or its repo README) — that's why they're not re-described here.
 - **[glab-mr](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/glab-mr)** — slash commands that fetch full MR state and fix failing CI / unresolved comments.
 - **[git](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/git)** — judgment rules for shaping atomic commits, branches, and review responses (not git mechanics).
 - **[code-review](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/code-review)** — orchestrates parallel focused review subagents over the current branch and compiles a report.
+- **[sdlc](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/sdlc)** — the whole delivery loop as slash commands: `/sdlc:pre-plan`, `/sdlc:write-plan`, `/sdlc:ticket-new`, `/sdlc:mr-open`, `/sdlc:mr-babysit`, `/sdlc:brief-next-steps`. This plugin supersedes the loose `/pre-plan`, `/write-plan`, `/ticket-new`, and `/open-mr` commands, so `.claude/commands/` does not carry them.
 - **[glab-discussion](https://github.com/fprochazka/glab-discussion)** — file-per-thread CLI for reading/writing GitLab MR discussion threads (which raw `glab` handles poorly).
 - **[glab-pipeline](https://github.com/fprochazka/glab-pipeline)** — deep CI pipeline inspector that dumps full state + a problem-focused summary for agents.
 - **[slackcli](https://github.com/fprochazka/slackcli)** — read/search/send Slack as your own user (xoxp) and resolve Slack links.
@@ -124,36 +126,59 @@ Key choices worth understanding before you copy them:
 
 - **`hooks`**
   - `PreToolUse` Bash → `rtk hook claude` — transparent token-cutting rewrite of noisy commands.
-  - `SessionStart` → `scripts/inject-orchestrator-role.sh` — injects the orchestrator role (below)
-    into the **top-level** session only.
+  - `SessionStart` → `scripts/agent-role-inject.sh` — injects the orchestrator role (below) into the
+    top-level session.
+  - `SubagentStart` (matcher `""`, so it matches every `agent_type`) → the **same** script — injects
+    the worker role into every subagent.
   - `Stop` → plays `icq-uh-oh.mp3` via mpg123 when a turn ends (pure vanity; safe to drop).
 - **`permissions.allow`** — a read-only allowlist (reads under `~/devel`, `~/.claude*`, `/tmp`;
   `* --help` / `* --version`; bare `Skill`). The philosophy: **read-only is auto-allowed, anything
   remote/destructive prompts.** Beyond this static allowlist, rely on Claude's **auto mode** to
   approve provably-safe commands. (I used to drive this with a custom `bash-classify-hook` plugin;
   it's intentionally **not** part of this package anymore.)
+- **`permissions.defaultMode: "auto"`** — the flip side of the small allowlist. Auto mode judges each
+  command instead of prompting for every read.
 - **`model`** — pinned to a specific Opus build (`claude-opus-4-8[1m]`, 1M context). Change to your
-  current model.
+  current model. The per-profile `model` in `.claude-profiles/config.yaml` overrides this one.
+- **`attribution`** — empty `commit` / `pr` strings and `sessionUrl: false`, so Claude adds no
+  trailer to commits and no footer to MRs. The work profiles turn the trailers back on per profile.
 - **`autoCompactEnabled: false`** — I manage context **by hand** instead of letting auto-compaction
   fire. The status line shows headroom; when I need to shed, I run `/handover-generate` and start a
   fresh session rather than compact in place. This is deliberate — compaction mid-task costs quality.
 - **`alwaysThinkingEnabled: true`**, **`effortLevel: "medium"`**, **`autoMemoryEnabled: true`**,
   **`plansDirectory: ".claude/plans/"`**, **`cleanupPeriodDays: 99999`** (never auto-delete
-  sessions), **`spinnerVerbs`** replaced with "Hallucinating" (vanity).
+  sessions), **`tui: "fullscreen"`**, **`spinnerVerbs`** replaced with "Hallucinating" (vanity),
+  **`feedbackSurveyRate: 0`** (no survey prompts).
 - **`env`** — `DISABLE_AUTOUPDATER=1` (I pin the version manually),
   `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1` (load `CLAUDE.md` from `--add-dir` dirs),
-  `CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR=1`, plus a couple of tool toggles.
+  `CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR=1`, `CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1`, plus a
+  couple of tool toggles.
 
 > Paths inside this file use `~/...` / `$HOME/...` forms so they work for any user. If you add
 > absolute paths of your own, swap them for your real home directory.
 
-### `orchestrator-role.md` + `scripts/inject-orchestrator-role.sh`
-The **main agent is a pure orchestrator**: it talks to you, decides, delegates, and synthesizes —
-it does *not* do bulk work itself. Code exploration, writing, builds/tests, DB/infra/telemetry
-queries, and bulk searches all get delegated to subagents (one at a time, watched — never
-background/parallel unless asked). The injector script reads the SessionStart hook payload and
-injects this role **only into the top-level session** (it detects subagents by the `agent_id` field
-and stays silent for them, so subagents aren't told to delegate-the-delegation).
+### `agent-role-orchestrator.md` + `agent-role-worker.md` + `scripts/agent-role-inject.sh`
+Two role files, two hook events, one script. The script reads `hook_event_name` from the hook payload
+and prints the matching role file back as `additionalContext`.
+
+- **`SessionStart` → `agent-role-orchestrator.md`.** The **main agent is a pure orchestrator**: it
+  talks to you, decides, delegates, and synthesizes — it does *not* do bulk work itself. Code
+  exploration, writing, builds/tests, DB/infra/telemetry queries, and bulk searches all go to
+  subagents.
+- **`SubagentStart` → `agent-role-worker.md`.** A subagent does the delegated task in the foreground,
+  reports findings, and ends its turn. It must not background anything, must not poll or wait, and
+  must not report an intention in place of a result.
+
+**Why two events.** `SessionStart` never fires for a subagent, so no subagent can get its role from
+that event. `SubagentStart` is the subagent injection point: its payload carries `agent_id` and
+`agent_type`, its matcher matches on `agent_type`, and exit code 0 with a JSON `additionalContext`
+hands the text to the subagent. The matcher here is `""`, so every agent type gets the worker role.
+
+**Depth is not detectable.** No hook payload carries a `depth`, `parent_agent_id`, or
+`parent_session_id` field, and `session_id` is identical at every level. One worker role therefore
+applies to every subagent at every depth, and the role file says so. The
+`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` env var caps the nesting instead — 3 layers below the main
+conversation by default.
 
 ### `scripts/status-line.sh`
 The instrument that makes manual context management possible. Shows: host letter, cwd (with a `⌥`
@@ -164,24 +189,32 @@ red ≥65%), model, active profile, and the time of the last transcript activity
 (https://github.com/fprochazka/gitconfig). Without it the rest still works.
 
 ### `commands/` — custom slash commands
-- **`/pre-plan`** — gather context (ticket + code) and frame the problem; does NOT plan or implement.
 - **`/handover-generate`** — write a WHAT+WHY handover doc so a fresh session can resume cleanly
   (my alternative to auto-compaction).
-- **`/ticket-new`** — draft + create a ticket from the conversation.
-- **`/open-mr`** — open a draft MR and refine its title/description to match the real changes.
+- **`/bro`** — restate the last answer in plain language, with the conclusion intact.
 - **`/interview`** — long technical interview that produces a detailed project spec.
 - **`/remember`** — reflect and propose updates to permanent memory files.
 - **`/chrome-auto-connect`** — connect `agent-browser` to your already-running Chrome.
 
+> The delivery-loop commands (`/pre-plan`, `/write-plan`, `/ticket-new`, `/open-mr`) live in the
+> **`sdlc` plugin**, not here — a loose file of the same name would shadow the plugin version.
+
 ### `CLAUDE.md` — global memory
 My global rules (skills-first, never dismiss build errors, minimal local verification + let CI do
-the heavy lifting, `$(cat <file>)` for long tool args, jq-over-python). **Identity is placeholdered**
-— set your own name/email at the top.
+the heavy lifting, `$(cat <file>)` for long tool args, jq-over-python, never promise anything on my
+behalf in a draft written for someone else). The last line imports the `ste-writing` skill, so the
+prose rules apply to every doc, MR description, and reply. **Identity is placeholdered** — set your
+own name/email at the top.
 
 ### `skills/` — bundled skills  ⚠️ prune what you don't use
-The skills shipped here all wrap generic CLIs you'd install separately (`gh`, `gws`, `linear-mcp`,
+Most skills shipped here wrap generic CLIs you'd install separately (`gh`, `gws`, `linear-mcp`,
 `outline`, `readwise`). Each carries `trigger-keywords` so it auto-loads when relevant. **Keep only
 the ones whose CLIs you actually install.**
+
+**`ste-writing`** is the exception — it backs no CLI. It is a prompt-only style guide that rewrites
+prose (docs, READMEs, MR descriptions, error messages, comments) into ASD-STE100 Simplified
+Technical English, which strips the AI-slop register out of generated text. `CLAUDE.md` pulls it in
+with `@~/.claude/skills/ste-writing/SKILL.md`, so keep the skill if you keep that import.
 
 > The **Datadog `dd-*` skills are intentionally NOT shipped here** — `pup` installs its own
 > (always matching the installed version). See [Datadog telemetry](#datadog-telemetry--pup--its-skills).
@@ -197,8 +230,11 @@ The example config runs three accounts (personal / work team / work-via-Vertex) 
 isolated credentials but a **shared** `~/.claude/` config, using
 [`claude-code-auth-switch`](https://github.com/fprochazka/claude-code-auth-switch).
 
-- **`.claude-profiles/config.yaml`** is the source of truth (model, `--add-dir`s, attribution,
-  per-profile env like `GITLAB_HOST` / `DD_SITE` / `SLACK_ORG` / Vertex).
+- **`.claude-profiles/config.yaml`** is the source of truth (model, `pinned_models`, `--add-dir`s,
+  attribution, per-profile env like `GITLAB_HOST` / `DD_SITE` / `SLACK_ORG` / Vertex).
+  `pinned_models` maps a model class to a concrete build and becomes an
+  `ANTHROPIC_DEFAULT_<CLASS>_MODEL` env var, so a subagent asked to run on `sonnet` gets the build
+  you pinned rather than the harness default.
 - Running `install.py` generates the thin wrapper scripts in **`.local/bin/claude-*`**, each of which
   isolates `CLAUDE_CONFIG_DIR`, exports the profile env, and injects the default model + add-dirs.
   Those wrappers are **auto-generated** — included here only as reference; don't hand-edit them.
@@ -339,7 +375,7 @@ setup. Treat the repo as a **home-directory overlay** (`.claude/` → `~/.claude
    block dropped. Do **not** write a placeholder into a live config.
 4. **Check prerequisites per component** (see the Prerequisites section). If a hook references a tool
    the user doesn't have (`rtk`, `mpg123`, `jq`), either install it or drop that hook — don't leave a
-   broken hook. `jq` is required for the orchestrator hook and status line.
+   broken hook. `jq` is required for the agent-role hook and the status line.
 5. **Fix paths.** Any absolute home paths must become the user's home. Prefer the `~/...` /
    `$HOME/...` forms already used throughout.
 6. **Skills:** only copy the ones the user wants; most need their CLI installed. Confirm before
@@ -354,5 +390,6 @@ setup. Treat the repo as a **home-directory overlay** (`.claude/` → `~/.claude
    suggest restarting Claude Code to load new hooks/plugins/settings.
 
 **Suggested order for a full adoption:** plugins (install script) → `settings.json` (merge) →
-`orchestrator-role.md` + injector hook → `status-line.sh` → `commands/` → `CLAUDE.md` (merge,
-re-identify) → chosen `skills/` → tool configs → (optional) profiles.
+the two `agent-role-*.md` files + the `SessionStart`/`SubagentStart` injector hook → `status-line.sh`
+→ `commands/` → `CLAUDE.md` (merge, re-identify) → chosen `skills/` (keep `ste-writing` if you keep
+the `CLAUDE.md` import) → tool configs → (optional) profiles.

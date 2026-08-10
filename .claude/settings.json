@@ -4,8 +4,14 @@
   "env": {
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
     "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1",
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
     "DISABLE_AUTOUPDATER": "1",
     "RABBITMQADMIN_NON_INTERACTIVE_MODE": "true"
+  },
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
   },
   "permissions": {
     "allow": [
@@ -22,6 +28,7 @@
       "Skill"
     ],
     "deny": [],
+    "defaultMode": "auto",
     "additionalDirectories": [
       "/tmp"
     ]
@@ -56,7 +63,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/scripts/inject-orchestrator-role.sh"
+            "command": "bash ~/.claude/scripts/agent-role-inject.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/agent-role-inject.sh"
           }
         ]
       }
@@ -82,7 +100,8 @@
     "plugin-dev@claude-code-plugins": true,
     "slackcli@fprochazka-slackcli": true,
     "warp@claude-code-warp": true,
-    "glab-pipeline@fprochazka-glab-pipeline": true
+    "glab-pipeline@fprochazka-glab-pipeline": true,
+    "sdlc@fprochazka-claude-code-plugins": true
   },
   "extraKnownMarketplaces": {
     "fprochazka-claude-code-plugins": {
@@ -126,8 +145,15 @@
         "source": "git",
         "url": "git@github.com:fprochazka/glab-pipeline.git"
       }
+    },
+    "claude-code-warp": {
+      "source": {
+        "source": "github",
+        "repo": "warpdotdev/claude-code-warp"
+      }
     }
   },
+  "feedbackSurveyRate": 0,
   "spinnerVerbs": {
     "mode": "replace",
     "verbs": [
@@ -138,6 +164,7 @@
   "effortLevel": "medium",
   "showClearContextOnPlanAccept": false,
   "plansDirectory": ".claude/plans/",
+  "tui": "fullscreen",
   "autoMemoryEnabled": true,
   "theme": "auto",
   "autoCompactEnabled": false,

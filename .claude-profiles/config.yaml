@@ -3,6 +3,10 @@
 # Consumed by `claude-code-auth-switch` (https://github.com/fprochazka/claude-code-auth-switch).
 # `install.py` reads this file, creates ~/.claude-profiles/<name>/ per profile, and generates
 # thin wrapper scripts in bin_dir (see ../.local/bin/claude-*).
+#
+# `model` becomes the wrapper's default `--model` argument. `pinned_models` maps a model class to a
+# concrete build and becomes an `ANTHROPIC_DEFAULT_<CLASS>_MODEL` env var, so a subagent asked to run
+# on `sonnet` gets the build you pinned instead of whatever the harness defaults to.
 
 source_dir: ~/.claude
 bin_dir: ~/.local/bin
@@ -10,13 +14,17 @@ bin_dir: ~/.local/bin
 profiles:
   personal:
     description: "Personal Anthropic account"
-    model: "claude-opus-4-8[1m]"
+    model: "claude-opus-5[1m]"
+    pinned_models:
+      sonnet: claude-sonnet-4-6
     env:
       AGENT_BROWSER_AUTO_CONNECT: 1
 
   work-team:
     description: "Work team subscription"
-    model: "claude-opus-4-8[1m]"
+    model: "claude-opus-5[1m]"
+    pinned_models:
+      sonnet: claude-sonnet-4-6
     add_dirs:
       - ~/devel/projects/work
     attribution:
@@ -30,7 +38,9 @@ profiles:
 
   work-vertex:
     description: "Work via Google Cloud Vertex AI"
-    model: "claude-opus-4-8[1m]"
+    model: "claude-opus-5[1m]"
+    pinned_models:
+      sonnet: claude-sonnet-4-6
     add_dirs:
       - ~/devel/projects/work
     attribution:

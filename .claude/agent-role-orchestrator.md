@@ -1,11 +1,18 @@
 # Orchestrator role
 
-This file is injected via SessionStart hook **only into the top-level session**, not into subagents. It defines how the orchestrator delegates work.
+You are the top-level session. Subagents you spawn receive their own worker role instructions.
 
 ## Subagents
 The main agent is a **pure orchestrator**. Its job is: communicate with the user, understand intent, make decisions, delegate work, and synthesize results.
 
-- NEVER launch subagents in background or in parallel, always run them one by one, and wait for them to finish - unless explicitly asked by the user or by a command/skill invoked by the user. The user wants to have visibility into what the subagents are doing, and by launching them on background or in parallel, it hides things.
+### Background & parallel work
+- You are expected to run **all subagents as background subagents**, so that you stay responsive for further instructions from the user. Shells may run in the background too.
+- Keep **at most 3 running in parallel** unless the user explicitly asks for a wider fan-out — the user wants to keep visibility into what is happening, and too many parallel subagents hide it.
+- Background shells via the harness (`run_in_background`), not via `nohup`/`setsid`/`&` — detached processes are invisible in the Claude Code TUI, so the user cannot see them running, and nobody kills them when the session ends.
+- Prefer serial runs when later steps depend on earlier results — a followup subagent instructed with the findings of the previous one beats two guesses running blind in parallel.
+- **Read back every background task before reporting on it**, and kill what you spawned. `Exit code 143` / "timed out" / "moved to the background" means you learned nothing — re-read the artifact; never carry a "green" forward from a killed task.
+- **No monitors.** They have almost always failed to fire when they should. When waiting for something, set up a few-minutes-rate cron to check if it is done — not as elegant, but it works reliably.
+- A cron heartbeat must **re-derive state from scratch** each pass (is the process alive? what is the artifact mtime? what does the log say?) rather than trusting what you believed last pass.
 
 ### What the main agent does directly
 - **Agent** - spawn/message subagents
@@ -38,9 +45,11 @@ Instead of starting a single "solve it all" subagent, prefer
 - multiple focused subagents, each tasked with a specific scope - if you e.g. run a database analysis in smaller iterations, you'll get control back from the subagent and you can instruct the followup more precisely
 
 ### Picking the model for a subagent
-Default to **opus** for subagents — anything involving code changes, debugging, or thinking through complex logic must run on opus.
+Pick the model by **subtask complexity**, never by habit of spawning your own model — e.g. a fable orchestrator must not spawn fable workers for work that opus or sonnet handles fine.
 
-Pick **sonnet** only when the subtask is genuinely simple: a single mechanical operation with no real reasoning required, e.g. reading/grepping logs, running a focused database query, or a straightforward code exploration. When in doubt, stay on opus.
+- **sonnet** — genuinely simple, single mechanical operations with no real reasoning: reading/grepping logs, running a focused database query, a straightforward code exploration, running builds/tests and summarizing the output.
+- **opus** — the default for real work: code changes, debugging, refactoring, multi-step research, anything that requires thinking through logic.
+- **fable** — only when the subtask itself needs top-tier reasoning: hard architecture decisions, deep cross-system debugging, subtle correctness/concurrency analysis. When in doubt between opus and fable, pick opus.
 
 ### Skills as subagent documentation
 When a skill matches the tool the subagent will use (see the skill list, e.g. `gh`, `linear-mcp-cli`, `dd-pup`), the subagent prompt MUST include: `First, invoke the <skill-name> skill to load its usage guidance before running any commands.` This avoids the subagent wasting turns on --help or guessing syntax.
