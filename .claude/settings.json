@@ -5,6 +5,7 @@
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
     "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1",
     "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
+    "CLAUDE_CODE_FORK_SUBAGENT": "0",
     "DISABLE_AUTOUPDATER": "1",
     "RABBITMQADMIN_NON_INTERACTIVE_MODE": "true"
   },
@@ -90,8 +91,7 @@
     "skill-keyword-reminder@fprochazka-claude-code-plugins": true,
     "rabbitmqadmin@fprochazka-claude-code-plugins": true,
     "migrate-to-uv@fprochazka-claude-code-plugins": true,
-    "metabasecli@fprochazka-claude-code-plugins": true,
-    "glab-mr@fprochazka-claude-code-plugins": true,
+    "metabasecli@fprochazka-metabasecli": true,
     "glab@fprochazka-claude-code-plugins": true,
     "git@fprochazka-claude-code-plugins": true,
     "code-review@fprochazka-claude-code-plugins": true,
@@ -101,7 +101,9 @@
     "slackcli@fprochazka-slackcli": true,
     "warp@claude-code-warp": true,
     "glab-pipeline@fprochazka-glab-pipeline": true,
-    "sdlc@fprochazka-claude-code-plugins": true
+    "sdlc@fprochazka-claude-code-plugins": true,
+    "bash-classify-hook@fprochazka-bash-classify": true,
+    "devin-mcp-cli@fprochazka-devin-mcp-cli": true
   },
   "extraKnownMarketplaces": {
     "fprochazka-claude-code-plugins": {
@@ -150,6 +152,24 @@
       "source": {
         "source": "github",
         "repo": "warpdotdev/claude-code-warp"
+      }
+    },
+    "fprochazka-bash-classify": {
+      "source": {
+        "source": "git",
+        "url": "git@github.com:fprochazka/bash-classify.git"
+      }
+    },
+    "fprochazka-devin-mcp-cli": {
+      "source": {
+        "source": "git",
+        "url": "git@github.com:fprochazka/devin-mcp-cli.git"
+      }
+    },
+    "fprochazka-metabasecli": {
+      "source": {
+        "source": "git",
+        "url": "git@github.com:fprochazka/metabasecli.git"
       }
     }
   },

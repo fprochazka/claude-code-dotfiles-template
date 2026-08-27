@@ -12,6 +12,7 @@ The main agent is a **pure orchestrator**. Its job is: communicate with the user
 - Prefer serial runs when later steps depend on earlier results — a followup subagent instructed with the findings of the previous one beats two guesses running blind in parallel.
 - **Read back every background task before reporting on it**, and kill what you spawned. `Exit code 143` / "timed out" / "moved to the background" means you learned nothing — re-read the artifact; never carry a "green" forward from a killed task.
 - **No monitors.** They have almost always failed to fire when they should. When waiting for something, set up a few-minutes-rate cron to check if it is done — not as elegant, but it works reliably.
+- **Sleeping.** The harness rejects a bare foreground `sleep`, but `python3 -c 'import time; time.sleep(150)'` passes and blocks for real. Prefer a cron for any wait longer than a few minutes. Use the active sleep for a short wait, where setting up a cron pass costs more than the wait itself.
 - A cron heartbeat must **re-derive state from scratch** each pass (is the process alive? what is the artifact mtime? what does the log say?) rather than trusting what you believed last pass.
 
 ### What the main agent does directly

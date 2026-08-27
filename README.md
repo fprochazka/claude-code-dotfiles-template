@@ -65,8 +65,8 @@ Not all are required; install what the parts you adopt actually use.
 - **uv** — most of my CLIs install via `uv tool install`.
 - **bash-classify** — https://github.com/fprochazka/bash-classify — the **CLI** is required by the
   `noisy-tools-in-subagent` plugin (it parses commands to detect noisy build/test tools); install it
-  per the repo's instructions. (Note: I do **not** ship the `bash-classify-hook` permission plugin
-  here — Claude's auto mode covers that now.)
+  per the repo's instructions. The same CLI backs the `bash-classify-hook` plugin, which auto-allows
+  the commands it classifies as low-risk.
 - **mpg123** (optional) — the `Stop` hook plays a sound when a turn finishes. Drop the hook if you
   don't want it.
 - **claude-code-auth-switch** — https://github.com/fprochazka/claude-code-auth-switch — only if you
@@ -75,7 +75,7 @@ Not all are required; install what the parts you adopt actually use.
   monitors/incidents). Ships its own Claude Code skills — **install them from pup itself**, don't
   copy them here (see [Datadog telemetry](#datadog-telemetry--pup--its-skills) below).
 - **glab** (GitLab CLI) — https://gitlab.com/gitlab-org/cli/#installation — the upstream CLI that
-  backs the `glab`, `glab-mr`, `glab-discussion`, and `glab-pipeline` plugins; install per its
+  backs the `glab`, `glab-discussion`, and `glab-pipeline` plugins; install per its
   instructions. Point it at your instance via `GITLAB_HOST` (the work profiles set
   `gitlab.example.com` as an example).
 - Per-tool CLIs (only if you adopt their config/skill): `rabbitmqadmin`, `gh`, `gcloud`, etc.
@@ -104,15 +104,16 @@ or its repo README) — that's why they're not re-described here.
 - **[skill-keyword-reminder](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/skill-keyword-reminder)** — scans each prompt and nudges Claude to load the matching skill, so lazy-loaded skills actually load.
 - **[rabbitmqadmin](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/rabbitmqadmin)** — read-only inspection of RabbitMQ vhosts/queues/exchanges/bindings.
 - **[migrate-to-uv](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/migrate-to-uv)** — converts Python projects from Poetry/pipx/pip to uv.
-- **[metabasecli](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/metabasecli)** — query Metabase cards, dashboards, and collections from the terminal.
-- **[glab](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/glab)** — teaches Claude correct use of the GitLab `glab` CLI.
-- **[glab-mr](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/glab-mr)** — slash commands that fetch full MR state and fix failing CI / unresolved comments.
+- **[metabasecli](https://github.com/fprochazka/metabasecli)** — query Metabase cards, dashboards, and collections from the terminal. It installs from its own marketplace, `fprochazka-metabasecli`.
+- **[glab](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/glab)** — the `glab` skill for correct use of the GitLab CLI, the `/glab:overview`, `/glab:comments`, and `/glab:pipeline` MR commands, and the `mr-status` review-state skill.
 - **[git](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/git)** — judgment rules for shaping atomic commits, branches, and review responses (not git mechanics).
 - **[code-review](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/code-review)** — orchestrates parallel focused review subagents over the current branch and compiles a report.
 - **[sdlc](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/sdlc)** — the whole delivery loop as slash commands: `/sdlc:pre-plan`, `/sdlc:write-plan`, `/sdlc:ticket-new`, `/sdlc:mr-open`, `/sdlc:mr-babysit`, `/sdlc:brief-next-steps`. This plugin supersedes the loose `/pre-plan`, `/write-plan`, `/ticket-new`, and `/open-mr` commands, so `.claude/commands/` does not carry them.
 - **[glab-discussion](https://github.com/fprochazka/glab-discussion)** — file-per-thread CLI for reading/writing GitLab MR discussion threads (which raw `glab` handles poorly).
 - **[glab-pipeline](https://github.com/fprochazka/glab-pipeline)** — deep CI pipeline inspector that dumps full state + a problem-focused summary for agents.
 - **[slackcli](https://github.com/fprochazka/slackcli)** — read/search/send Slack as your own user (xoxp) and resolve Slack links.
+- **[bash-classify-hook](https://github.com/fprochazka/bash-classify)** — auto-allows the bash commands that the `bash-classify` CLI classifies as low-risk, so read-only work stops prompting.
+- **[devin-mcp-cli](https://github.com/fprochazka/devin-mcp-cli)** — skill for the Devin MCP server through the `devin-mcp` CLI: sessions, playbooks, knowledge, schedules, repos.
 - **[agent-browser](https://github.com/vercel-labs/agent-browser)** *(Vercel)* — drives a real Chrome via CDP for browsing, testing, and automation.
 - **[plugin-dev](https://github.com/anthropics/claude-code)** *(Anthropic)* — toolkit for building Claude Code plugins, skills, and hooks.
 - **[warp](https://github.com/warpdotdev/claude-code-warp)** *(Warp)* — native Warp terminal notifications when a turn finishes or needs input.
@@ -134,8 +135,9 @@ Key choices worth understanding before you copy them:
 - **`permissions.allow`** — a read-only allowlist (reads under `~/devel`, `~/.claude*`, `/tmp`;
   `* --help` / `* --version`; bare `Skill`). The philosophy: **read-only is auto-allowed, anything
   remote/destructive prompts.** Beyond this static allowlist, rely on Claude's **auto mode** to
-  approve provably-safe commands. (I used to drive this with a custom `bash-classify-hook` plugin;
-  it's intentionally **not** part of this package anymore.)
+  approve provably-safe commands. The `bash-classify-hook` plugin complements the small static
+  allowlist alongside `permissions.defaultMode: "auto"`. It auto-allows the commands that the
+  `bash-classify` CLI classifies as low-risk.
 - **`permissions.defaultMode: "auto"`** — the flip side of the small allowlist. Auto mode judges each
   command instead of prompting for every read.
 - **`model`** — pinned to a specific Opus build (`claude-opus-4-8[1m]`, 1M context). Change to your
@@ -235,6 +237,10 @@ isolated credentials but a **shared** `~/.claude/` config, using
   `pinned_models` maps a model class to a concrete build and becomes an
   `ANTHROPIC_DEFAULT_<CLASS>_MODEL` env var, so a subagent asked to run on `sonnet` gets the build
   you pinned rather than the harness default.
+- **`attribution.sessionUrl`** is a boolean. Set it to `false` and the profile drops the
+  `Claude-Session:` trailer. The
+  [`claude-code-auth-switch`](https://github.com/fprochazka/claude-code-auth-switch) README carries
+  the full reference table of `config.yaml` options.
 - Running `install.py` generates the thin wrapper scripts in **`.local/bin/claude-*`**, each of which
   isolates `CLAUDE_CONFIG_DIR`, exports the profile env, and injects the default model + add-dirs.
   Those wrappers are **auto-generated** — included here only as reference; don't hand-edit them.
