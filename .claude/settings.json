@@ -7,7 +7,8 @@
     "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
     "CLAUDE_CODE_FORK_SUBAGENT": "0",
     "DISABLE_AUTOUPDATER": "1",
-    "RABBITMQADMIN_NON_INTERACTIVE_MODE": "true"
+    "RABBITMQADMIN_NON_INTERACTIVE_MODE": "true",
+    "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
   },
   "attribution": {
     "commit": "",
@@ -28,7 +29,15 @@
       "Bash(* --version)",
       "Skill"
     ],
-    "deny": [],
+    "deny": [
+      "ReportFindings",
+      "SendFeedback",
+      "DesignSync",
+      "NotebookEdit",
+      "PushNotification",
+      "RemoteTrigger",
+      "SendUserFile"
+    ],
     "defaultMode": "auto",
     "additionalDirectories": [
       "/tmp"
@@ -103,7 +112,8 @@
     "glab-pipeline@fprochazka-glab-pipeline": true,
     "sdlc@fprochazka-claude-code-plugins": true,
     "bash-classify-hook@fprochazka-bash-classify": true,
-    "devin-mcp-cli@fprochazka-devin-mcp-cli": true
+    "devin-mcp-cli@fprochazka-devin-mcp-cli": true,
+    "prose@fprochazka-claude-code-plugins": true
   },
   "extraKnownMarketplaces": {
     "fprochazka-claude-code-plugins": {

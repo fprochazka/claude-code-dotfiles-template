@@ -11,7 +11,7 @@ The directory tree mirrors your **home directory**, so every file is shown where
 ```
 .claude/                     → ~/.claude/
   settings.json              the harness config (hooks, permissions, plugins, model, …)
-  CLAUDE.md                  global memory / rules (identity placeholdered)
+  agent-all.md               global rules, injected into every session and subagent (identity placeholdered)
   agent-role-orchestrator.md SessionStart-injected role for the top-level session
   agent-role-worker.md       SubagentStart-injected role for every subagent
   icq-uh-oh.mp3              sound played by the Stop hook when a turn finishes
@@ -101,6 +101,7 @@ or its repo README) — that's why they're not re-described here.
 
 - **[noisy-tools-in-subagent](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/noisy-tools-in-subagent)** — forces builds/tests/linters into an isolated subagent so their noisy output never pollutes the main context.
 - **[searxngcli](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/searxngcli)** — web research via a self-hosted SearXNG metasearch engine, run in a subagent.
+- **[prose](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/prose)** — how Claude talks and writes: `reply-style` with a per-prompt reminder hook, the `technical-writing` rule set for docs, comments, commits and MR text, and `/prose:bro` to restate the last answer in plain language.
 - **[skill-keyword-reminder](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/skill-keyword-reminder)** — scans each prompt and nudges Claude to load the matching skill, so lazy-loaded skills actually load.
 - **[rabbitmqadmin](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/rabbitmqadmin)** — read-only inspection of RabbitMQ vhosts/queues/exchanges/bindings.
 - **[migrate-to-uv](https://github.com/fprochazka/claude-code-plugins/tree/master/plugins/migrate-to-uv)** — converts Python projects from Poetry/pipx/pip to uv.
@@ -193,7 +194,6 @@ red ≥65%), model, active profile, and the time of the last transcript activity
 ### `commands/` — custom slash commands
 - **`/handover-generate`** — write a WHAT+WHY handover doc so a fresh session can resume cleanly
   (my alternative to auto-compaction).
-- **`/bro`** — restate the last answer in plain language, with the conclusion intact.
 - **`/interview`** — long technical interview that produces a detailed project spec.
 - **`/remember`** — reflect and propose updates to permanent memory files.
 - **`/chrome-auto-connect`** — connect `agent-browser` to your already-running Chrome.
@@ -201,22 +201,18 @@ red ≥65%), model, active profile, and the time of the last transcript activity
 > The delivery-loop commands (`/pre-plan`, `/write-plan`, `/ticket-new`, `/open-mr`) live in the
 > **`sdlc` plugin**, not here — a loose file of the same name would shadow the plugin version.
 
-### `CLAUDE.md` — global memory
+### `agent-all.md` — global rules
 My global rules (skills-first, never dismiss build errors, minimal local verification + let CI do
-the heavy lifting, `$(cat <file>)` for long tool args, jq-over-python, never promise anything on my
-behalf in a draft written for someone else). The last line imports the `ste-writing` skill, so the
-prose rules apply to every doc, MR description, and reply. **Identity is placeholdered** — set your
-own name/email at the top.
+the heavy lifting, `$(cat <file>)` for long tool args, jq-over-python, and never promise anything on my
+behalf in a draft written for someone else). `agent-role-inject.sh` injects it at `SessionStart` and
+`SubagentStart`, ahead of the role file, and expands one level of `@path` imports. The reply style and
+the prose rules for docs, comments, commits and MR text live in the **`prose` plugin**, not here.
+**Identity is placeholdered** — set your own name/email at the top.
 
 ### `skills/` — bundled skills  ⚠️ prune what you don't use
 Most skills shipped here wrap generic CLIs you'd install separately (`gh`, `gws`, `linear-mcp`,
 `outline`, `readwise`). Each carries `trigger-keywords` so it auto-loads when relevant. **Keep only
 the ones whose CLIs you actually install.**
-
-**`ste-writing`** is the exception — it backs no CLI. It is a prompt-only style guide that rewrites
-prose (docs, READMEs, MR descriptions, error messages, comments) into ASD-STE100 Simplified
-Technical English, which strips the AI-slop register out of generated text. `CLAUDE.md` pulls it in
-with `@~/.claude/skills/ste-writing/SKILL.md`, so keep the skill if you keep that import.
 
 > The **Datadog `dd-*` skills are intentionally NOT shipped here** — `pup` installs its own
 > (always matching the installed version). See [Datadog telemetry](#datadog-telemetry--pup--its-skills).
@@ -244,7 +240,7 @@ isolated credentials but a **shared** `~/.claude/` config, using
 - Running `install.py` generates the thin wrapper scripts in **`.local/bin/claude-*`**, each of which
   isolates `CLAUDE_CONFIG_DIR`, exports the profile env, and injects the default model + add-dirs.
   Those wrappers are **auto-generated** — included here only as reference; don't hand-edit them.
-- It works by pointing `CLAUDE_CONFIG_DIR` at a per-profile dir; mutable files (settings, CLAUDE.md)
+- It works by pointing `CLAUDE_CONFIG_DIR` at a per-profile dir; mutable files (settings, agent-all.md)
   are copied, the rest of `~/.claude/` (commands/skills/agents/plugins) is symlinked back so it's shared.
 
 If you only have one account, you don't need any of this.
@@ -358,7 +354,7 @@ Everything sensitive in this repo is a **placeholder**. Before you rely on any o
 - `.config/metabasecli/config.toml` → `session_id` / `password`.
 - `.config/outline-cli/config.json` → `api_token`.
 - `.config/searxngcli/config.yml` → your own instance URL.
-- `.claude/CLAUDE.md` → your name + email.
+- `.claude/agent-all.md` → your name + email.
 
 There are **no real credentials** committed. Keep it that way.
 
@@ -374,7 +370,7 @@ setup. Treat the repo as a **home-directory overlay** (`.claude/` → `~/.claude
 1. **Ask the user the scope** unless they already said: *everything*, or a named subset
    (e.g. "just the orchestrator role + status line", "the permission setup", "the commands").
 2. **Never blindly overwrite.** For each target file that already exists in the user's `~`, diff it
-   and **merge** rather than clobber — especially `~/.claude/settings.json` and `~/.claude/CLAUDE.md`,
+   and **merge** rather than clobber — especially `~/.claude/settings.json` and `~/.claude/agent-all.md`,
    which are usually personalized. Show the user the diff for these two before writing.
 3. **Replace placeholders, don't copy them.** Anything matching `REPLACE_WITH_*`, `YOUR_*`,
    or the placeholdered identity must be filled with the user's real values (ask) or the surrounding
@@ -397,5 +393,4 @@ setup. Treat the repo as a **home-directory overlay** (`.claude/` → `~/.claude
 
 **Suggested order for a full adoption:** plugins (install script) → `settings.json` (merge) →
 the two `agent-role-*.md` files + the `SessionStart`/`SubagentStart` injector hook → `status-line.sh`
-→ `commands/` → `CLAUDE.md` (merge, re-identify) → chosen `skills/` (keep `ste-writing` if you keep
-the `CLAUDE.md` import) → tool configs → (optional) profiles.
+→ `commands/` → `agent-all.md` (merge, re-identify) → chosen `skills/` → tool configs → (optional) profiles.

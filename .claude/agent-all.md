@@ -46,14 +46,3 @@ For any tool/CLI argument longer than a few words (descriptions, comments, bodie
 * Never write "we will fix", "I'll look into it", "this will be improved", "a ticket is coming", "next release", or any softer paraphrase of the same thing.
 * If a fix genuinely belongs in the picture, describe it as an option and hand it to me separately — put it in your reply to me, not in the draft.
 * Same rule for implied promises: don't ask the other person to wait for us, don't say something is "already being worked on" unless I told you it is.
-
-## Code comments & docs
-- **Why, not what.** Comments and docs explain the reasoning code can't show ("X because W") — not a restatement of what the code does, and never the change ("this was Y, now X", "previously…", "renamed from…", "no longer…", intermediate/transitional state). The diff lives in git; describe only the current state. Historical "was Y, now X" framing belongs only in throwaway plan/analysis files where the diff is itself the subject.
-- Legacy *why* is the one valuable kind of history: "warehouses come from the `restaurants` table — legacy naming from the restaurant-delivery era" explains a non-obvious current reality, which is different from change-narration — keep this, drop that.
-- A comment that restates the code, narrates how the old behavior was broken, parks a transient caveat where it doesn't belong, or adds self-referential "mirrors the X pattern" filler has zero value — don't write it. Revisit a comment when it stops being true, not when nearby code changes.
-- Never put ticket refs (ABC-1234, JIRA/Linear IDs or URLs) in code comments, column/DB comments, migrations, or schema descriptions — they add no value and go stale; that context belongs in the MR/commit message or a plan file.
-
-### Prose style
-The rules imported below apply to **written prose artifacts** — docs, READMEs, MR/PR descriptions, commit bodies, error messages, release notes, code comments — **and to your conversational replies to me**. Replies use **STE-flavored** mode, never strict: keep the sentence-length cap, the active voice, the plain verbs and the one-topic paragraphs, but keep enough range to answer naturally. They do **not** apply to code, identifiers, or command syntax. The "write only the requested text, no preamble" instruction in them is scoped to a prose-rewriting request, not to normal answers.
-
-@~/.claude/skills/ste-writing/SKILL.md

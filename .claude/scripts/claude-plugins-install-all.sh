@@ -38,6 +38,7 @@ PLUGINS=(
   "migrate-to-uv@fprochazka-claude-code-plugins"
   "noisy-tools-in-subagent@fprochazka-claude-code-plugins"
   "plugin-dev@claude-code-plugins"
+  "prose@fprochazka-claude-code-plugins"
   "rabbitmqadmin@fprochazka-claude-code-plugins"
   "sdlc@fprochazka-claude-code-plugins"
   "searxngcli@fprochazka-claude-code-plugins"
